@@ -21,25 +21,25 @@ public class Order {
 
     private String orderId="258";
 
-//    private List<Gift> giftList;
+    private List<Gift> giftList;
 
-//    public Order() {
-//
-//        this.giftList = new ArrayList<Gift>();
-//        Gift gift = new Gift();
-//        gift.setGiftName("赠品-保护壳");
-//        gift.setGiftPrice("300");
-//
-//        Gift gift1 = new Gift();
-//        gift1.setGiftName("赠品-电脑包");
-//        gift1.setGiftPrice("400");
-//        giftList.add(gift);
-//        giftList.add(gift1);
-//
-//        Gift gift2 = new Gift();
-//        gift2.setGiftName("赠品-电脑包");
-//        gift2.setGiftPrice("400");
+    public Order() {
+
+        this.giftList = new ArrayList<Gift>();
+        Gift gift = new Gift();
+        gift.setGiftName("赠品-保护壳");
+        gift.setGiftPrice("300");
+
+        Gift gift1 = new Gift();
+        gift1.setGiftName("赠品-电脑包");
+        gift1.setGiftPrice("400");
+        giftList.add(gift);
+        giftList.add(gift1);
+
+        Gift gift2 = new Gift();
+        gift2.setGiftName("赠品-电脑包");
+        gift2.setGiftPrice("400");
 //        giftList.add(gift2);
-//
-//    }
+
+    }
 }

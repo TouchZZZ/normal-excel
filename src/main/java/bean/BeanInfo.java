@@ -109,8 +109,8 @@ public class BeanInfo<T> {
 
         for (T t: list) {
             List<Integer> countList = new ArrayList<Integer>();
+            int listCalculate=0;
             for (Field field : fields) {
-                int listCalculate=0;
                 if(field.getType().equals(List.class)){
                     AtomicInteger count = new AtomicInteger(0);
                     for (Object obj : (List<Object>)BeanUtil.getMethodByFieldName(t,field.getName())) {
