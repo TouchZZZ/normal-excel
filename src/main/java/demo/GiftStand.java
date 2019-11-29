@@ -2,8 +2,6 @@ package demo;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * ClassName:Gift <br/>
  * Description:  <br/>
@@ -14,7 +12,7 @@ import java.util.List;
  * @since JDK 1.8
  */
 @Data
-public class Gift {
-    private String giftName;
-    private List<GiftStand> giftStands;
+public class GiftStand {
+    private String standName;
+    private String gistPrice;
 }

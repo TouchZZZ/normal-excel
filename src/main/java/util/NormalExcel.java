@@ -12,16 +12,24 @@ import demo.Goods;
 import demo.GoodsStand;
 import demo.Order;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +43,12 @@ import java.util.Map;
  * @since JDK 1.8
  */
 public class NormalExcel {
+
+    private HttpServletResponse mResponse;
+
+    public static NormalExcel create(){
+        return new NormalExcel();
+    }
 
     public static void main(String[] args) throws Exception{
         List<Order> ordersList = new ArrayList<Order>();
@@ -87,7 +101,7 @@ public class NormalExcel {
         order1.getCategoryList().add(order2.getCategoryList().get(0));
 
 
-        writeMultiple(ordersList);
+        NormalExcel.create().writeMultiple(null,ordersList,"F:\\NMP\\FEBS-Vue-master\\backend\\target\\classes\\model\\normal.xlsx",13);
 
 
 
@@ -99,15 +113,14 @@ public class NormalExcel {
      * @param models
      * @param <T>
      */
-    public static <T> void writeMultiple(List<T> models) throws Exception{
+    public  <T> void writeMultiple(HttpServletResponse response,List<T> models,String path,int head) throws Exception{
         if(models.size()<=0){
             return;
         }
-
 //        Integer size = beanInfo.getSize();
-
         SXSSFWorkbook sxssfWorkbook = null;
-        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(new FileInputStream("F:\\s\\excel\\normal.xlsx"));
+        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(new FileInputStream(this.getClass().getResource("/"+path).getPath()));
+//        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(new FileInputStream(path));
         sxssfWorkbook = new SXSSFWorkbook(xssfWorkbook);
 
         XSSFWorkbook modelWorkbook = sxssfWorkbook.getXSSFWorkbook();
@@ -117,45 +130,77 @@ public class NormalExcel {
 
         BeanInfo beanInfo = new BeanInfo<T>(models);
         beanInfo.defaultListLine();
-        List<Map<String, String>> list = beanInfo.defaultLineMap();
         Map<String, Integer> map = beanInfo.defaultSort();
+        List<Map<String, String>> list = beanInfo.defaultLineMap();
+
         Map<Integer,List<MergeInfo>> mergeMap = beanInfo.defaultMergeMap();
 
 
-        int head=0;
+        //样式
+        //获取样式对象
+        CellStyle cellStyle = sxssfWorkbook.createCellStyle();
+        //设置样式对象，这里仅设置了边框属性
+        cellStyle.setBorderBottom(BorderStyle.THIN); //下边框
+        cellStyle.setBorderLeft(BorderStyle.THIN);//左边框
+        cellStyle.setBorderTop(BorderStyle.THIN);//上边框
+        cellStyle.setBorderRight(BorderStyle.THIN);//右边框
+        cellStyle.setAlignment(HorizontalAlignment.CENTER);//左右居中
+        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);//上下居中
+
         int i=0;
+        Map<Integer,String> maxSize = new HashMap<Integer, String>(16);
         for (Map<String, String> stringStringMap : list) {
             if(stringStringMap.size()>0){
                 Row row = sheet.createRow(head+i);
+                System.out.println(row.getRowNum());
 //                for (int j = 0; j < 2; j++) {
 //                    i++;
 //                    sheet.createRow(head+i);
 //                }
-                for (Map.Entry<String, String> entry : stringStringMap.entrySet()) {
-                    Cell cell = row.createCell(map.get(entry.getKey()));
-                    cell.setCellValue(entry.getValue());
+                if(maxSize.size()<=0){
+                    for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                        maxSize.put(entry.getValue(),entry.getKey());
+                    }
+                }
+                for (int j = 0; j < maxSize.size(); j++) {
+                    Cell cell = row.createCell(j);
+                    cell.setCellStyle(cellStyle);
+                    if(null!=maxSize.get(j)){
+                        cell.setCellValue(stringStringMap.get(maxSize.get(j)));
+                    }
+                }
+
+//                for (Map.Entry<String, String> entry : stringStringMap.entrySet()) {
+//                    Cell cell = row.createCell(map.get(entry.getKey()));
+//                    cell.setCellValue(entry.getValue());
+//                    cell.setCellStyle(cellStyle);
+//                }
+            }else{
+                //整行为空，则需要给整行加边框
+                Row row = sheet.createRow(head+i);
+                for (int j = 0; j < maxSize.size(); j++) {
+                    Cell cell = row.createCell(j);
+                    cell.setCellStyle(cellStyle);
                 }
             }
             i++;
-
         }
 
         //合并
         for (Map.Entry<Integer, List<MergeInfo>> entry : mergeMap.entrySet()) {
             for (MergeInfo mergeInfo : entry.getValue()) {
                 if(!mergeInfo.getStart().equals(mergeInfo.getEnd())){
-                    sheet.addMergedRegion(new CellRangeAddress(mergeInfo.getStart(),mergeInfo.getEnd(),entry.getKey(),entry.getKey()));
+                    sheet.addMergedRegion(new CellRangeAddress(mergeInfo.getStart()+head,mergeInfo.getEnd()+head,entry.getKey(),entry.getKey()));
                 }
             }
         }
 
 
+        NormalExportUtil.download(sxssfWorkbook,response,"aaa");
+//        FileOutputStream fos = null;
+//        fos = new FileOutputStream("F:\\s\\excel\\normal111.xlsx");
+//        sxssfWorkbook.write(fos);
 
-        FileOutputStream fos = null;
-        fos = new FileOutputStream("F:\\s\\excel\\normal111.xlsx");
-        sxssfWorkbook.write(fos);
-
-        System.out.println();
 
     }
 }
